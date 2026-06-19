@@ -28,6 +28,13 @@ public class DespachoController {
     @GetMapping
     public List<DespachoModel> listarDespachos() { return service.listarDespachos(); }
 
+    @GetMapping("/pedido/{idPedido}")
+    public ResponseEntity<DespachoModel> buscarPorPedido(@PathVariable int idPedido) {
+        return service.buscarPorPedido(idPedido)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/{id}")
     public Optional<DespachoModel> buscarPorId(@PathVariable int id) { return service.buscarPorId(id); }
 

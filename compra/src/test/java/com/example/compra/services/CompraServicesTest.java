@@ -36,6 +36,7 @@ class CompraServicesTest {
     void setUp() {
         compra = new Compra();
         compra.setIdCompra(1);
+        compra.setIdUsuario(1);
         compra.setIdInstrumento(10);
         compra.setCantidad(2);
         compra.setMontoTotal(100000);
@@ -63,6 +64,7 @@ class CompraServicesTest {
 
     @Test
     void realizarCompra_cuandoTodoOk_debeCompletarCompra() {
+        when(restTemplate.getForObject(contains("/usuarios/validar/"), eq(Boolean.class))).thenReturn(true);
         when(restTemplate.getForObject(contains("/instrumentos/validar/"), eq(Boolean.class))).thenReturn(true);
         when(restTemplate.getForObject(contains("/inventario/instrumento/"), eq(Object.class))).thenReturn(new Object());
 
@@ -85,6 +87,13 @@ class CompraServicesTest {
         assertNotNull(resultado);
         assertEquals("COMPLETADA", resultado.getEstadoCompra());
         verify(repository, times(2)).save(any(Compra.class));
+    }
+
+    @Test
+    void validarCompra_cuandoExiste_debeRetornarTrue() {
+        when(repository.existsById(1)).thenReturn(true);
+
+        assertTrue(service.validarCompra(1));
     }
 
     @Test

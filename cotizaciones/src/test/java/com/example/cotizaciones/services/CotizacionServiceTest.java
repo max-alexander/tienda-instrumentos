@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,6 +17,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,6 +26,9 @@ class CotizacionServiceTest {
 
     @Mock
     private CotizacionRepository cotizacionRepository;
+
+    @Mock
+    private RestTemplate restTemplate;
 
     @InjectMocks
     private CotizacionService service;
@@ -46,6 +52,8 @@ class CotizacionServiceTest {
 
     @Test
     void crearCotizacion_cuandoValida_debeGuardar() {
+        when(restTemplate.getForObject(contains("/usuarios/validar/"), eq(Boolean.class))).thenReturn(true);
+        when(restTemplate.getForObject(contains("/instrumentos/validar/"), eq(Boolean.class))).thenReturn(true);
         when(cotizacionRepository.save(any(Cotizacion.class))).thenReturn(cotizacion);
 
         Cotizacion resultado = service.crearCotizacion(cotizacion);

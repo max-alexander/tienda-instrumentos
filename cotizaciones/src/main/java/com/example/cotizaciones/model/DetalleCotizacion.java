@@ -1,5 +1,6 @@
 package com.example.cotizaciones.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -18,6 +19,7 @@ public class DetalleCotizacion {
 
     private int subtotal;
 
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cotizacion_id")
     private Cotizacion cotizacion;

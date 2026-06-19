@@ -4,16 +4,22 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.example.despacho.dto.CompraDto;
 import com.example.despacho.model.DespachoModel;
 import com.example.despacho.repository.DespachoRepository;
 
 @Service
 public class DespachoService {
+
+    private static final String COMPRA_URL = "http://localhost:8083/compras/";
+    private static final String COMPRA_VALIDAR_URL = "http://localhost:8083/compras/validar/";
+    private static final String USUARIO_VALIDAR_URL = "http://localhost:8089/usuarios/validar/";
+    private static final String DIRECCION_VALIDAR_URL = "http://localhost:8089/direcciones/validar/";
 
     @Autowired
     private DespachoRepository repository;
@@ -21,30 +27,27 @@ public class DespachoService {
     @Autowired
     private RestTemplate restTemplate;
 
-    private final String COMPRA_URL = "http://localhost:8083/compras/";
-    private final String USUARIO_URL = "http://localhost:8089/usuarios/";
-
     public List<DespachoModel> listarDespachos() { return repository.findAll(); }
 
     public Optional<DespachoModel> buscarPorId(int id) { return repository.findById(id); }
 
-    public DespachoModel crearDespacho(DespachoModel d) {
-        try {
-            ResponseEntity<String> compraResp = restTemplate.getForEntity(COMPRA_URL + d.getIdPedido(), String.class);
-            if (!compraResp.getStatusCode().is2xxSuccessful()) {
-                throw new RuntimeException("Compra no encontrada: " + d.getIdPedido());
-            }
-        } catch (RestClientException ex) {
-            throw new RuntimeException("Error validando compra: " + ex.getMessage());
-        }
+    public Optional<DespachoModel> buscarPorPedido(int idPedido) {
+        return repository.findByIdPedido(idPedido);
+    }
 
-        try {
-            ResponseEntity<String> userResp = restTemplate.getForEntity(USUARIO_URL + d.getIdUsuario(), String.class);
-            if (!userResp.getStatusCode().is2xxSuccessful()) {
-                throw new RuntimeException("Usuario no encontrado: " + d.getIdUsuario());
-            }
-        } catch (RestClientException ex) {
-            throw new RuntimeException("Error validando usuario: " + ex.getMessage());
+    public DespachoModel crearDespacho(DespachoModel d) {
+        validarExistencia(USUARIO_VALIDAR_URL + d.getIdUsuario(), "Usuario no encontrado: " + d.getIdUsuario());
+        validarExistencia(COMPRA_VALIDAR_URL + d.getIdPedido(), "Compra no encontrada: " + d.getIdPedido());
+        validarExistencia(
+                DIRECCION_VALIDAR_URL + d.getIdDireccion() + "?idUsuario=" + d.getIdUsuario(),
+                "Direccion invalida para el usuario: " + d.getIdDireccion());
+
+        CompraDto compra = obtenerCompra(d.getIdPedido());
+        if (compra.getIdUsuario() != d.getIdUsuario()) {
+            throw new RuntimeException("La compra no pertenece al usuario indicado");
+        }
+        if (!"COMPLETADA".equals(compra.getEstadoCompra())) {
+            throw new RuntimeException("La compra debe estar COMPLETADA para crear despacho");
         }
 
         return repository.save(d);
@@ -59,4 +62,29 @@ public class DespachoService {
     }
 
     public void eliminar(int id) { repository.deleteById(id); }
+
+    private void validarExistencia(String url, String mensaje) {
+        try {
+            Boolean existe = restTemplate.getForObject(url, Boolean.class);
+            if (!Boolean.TRUE.equals(existe)) {
+                throw new RuntimeException(mensaje);
+            }
+        } catch (RestClientException ex) {
+            throw new RuntimeException("Error validando recurso: " + ex.getMessage());
+        }
+    }
+
+    private CompraDto obtenerCompra(int idPedido) {
+        try {
+            CompraDto compra = restTemplate.getForObject(COMPRA_URL + idPedido, CompraDto.class);
+            if (compra == null) {
+                throw new RuntimeException("Compra no encontrada: " + idPedido);
+            }
+            return compra;
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new RuntimeException("Compra no encontrada: " + idPedido);
+        } catch (RestClientException ex) {
+            throw new RuntimeException("Error obteniendo compra: " + ex.getMessage());
+        }
+    }
 }

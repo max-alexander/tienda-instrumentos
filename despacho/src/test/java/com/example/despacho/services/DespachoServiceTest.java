@@ -1,5 +1,6 @@
 package com.example.despacho.services;
 
+import com.example.despacho.dto.CompraDto;
 import com.example.despacho.model.DespachoModel;
 import com.example.despacho.repository.DespachoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,8 +9,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
@@ -34,6 +33,7 @@ class DespachoServiceTest {
     private DespachoService service;
 
     private DespachoModel despacho;
+    private CompraDto compraDto;
 
     @BeforeEach
     void setUp() {
@@ -46,6 +46,11 @@ class DespachoServiceTest {
         despacho.setEstadoActual("PREPARANDO");
         despacho.setNumeroSeguimiento("ABC123");
         despacho.setFechaEstimadaEntrega(LocalDate.now().plusDays(3));
+
+        compraDto = new CompraDto();
+        compraDto.setIdCompra(5);
+        compraDto.setIdUsuario(2);
+        compraDto.setEstadoCompra("COMPLETADA");
     }
 
     @Test
@@ -69,14 +74,24 @@ class DespachoServiceTest {
 
     @Test
     void crearDespacho_cuandoValidacionesOk_debeGuardar() {
-        when(restTemplate.getForEntity(anyString(), eq(String.class)))
-                .thenReturn(new ResponseEntity<>("ok", HttpStatus.OK));
+        when(restTemplate.getForObject(contains("/validar/"), eq(Boolean.class))).thenReturn(true);
+        when(restTemplate.getForObject(contains("/compras/5"), eq(CompraDto.class))).thenReturn(compraDto);
         when(repository.save(despacho)).thenReturn(despacho);
 
         DespachoModel resultado = service.crearDespacho(despacho);
 
         assertNotNull(resultado);
         verify(repository).save(despacho);
+    }
+
+    @Test
+    void crearDespacho_cuandoCompraNoPerteneceAlUsuario_debeLanzarExcepcion() {
+        compraDto.setIdUsuario(99);
+        when(restTemplate.getForObject(contains("/validar/"), eq(Boolean.class))).thenReturn(true);
+        when(restTemplate.getForObject(contains("/compras/5"), eq(CompraDto.class))).thenReturn(compraDto);
+
+        assertThrows(RuntimeException.class, () -> service.crearDespacho(despacho));
+        verify(repository, never()).save(any());
     }
 
     @Test

@@ -22,7 +22,21 @@ public class CompraServices {
     public Optional<Compra> buscarPorId(int id) {
         return repository.findById(id);
     }
+
+    public boolean validarCompra(int id) {
+        return repository.existsById(id);
+    }
+
     public Compra realizarCompra(Compra compra) {
+        if (compra.getIdUsuario() <= 0) {
+            throw new RuntimeException("idUsuario es obligatorio");
+        }
+
+        String validarUsuarioURL = "http://localhost:8089/usuarios/validar/" + compra.getIdUsuario();
+        Boolean usuarioExiste = restTemplate.getForObject(validarUsuarioURL, Boolean.class);
+        if (Boolean.FALSE.equals(usuarioExiste)) {
+            throw new RuntimeException("Usuario no existe");
+        }
 
         String validarInstrumentoURL = "http://localhost:8087/instrumentos/validar/" + compra.getIdInstrumento();
         Boolean instrumentoExiste = restTemplate.getForObject( validarInstrumentoURL,Boolean.class);

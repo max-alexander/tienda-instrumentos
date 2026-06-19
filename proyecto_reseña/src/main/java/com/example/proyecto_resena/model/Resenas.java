@@ -21,16 +21,21 @@ public class Resenas {
     private LocalDate fecha;
 
     private Integer idUsuario;
+    private Integer idInstrumento;
+    private Integer idCompra;
 
     public Resenas() {  
     }
 
-    public Resenas(Integer id, Integer estrellas, String comentarios, LocalDate fecha, Integer idUsuario) {
+    public Resenas(Integer id, Integer estrellas, String comentarios, LocalDate fecha,
+            Integer idUsuario, Integer idInstrumento, Integer idCompra) {
         this.id = id;
         this.estrellas = estrellas;
         this.comentarios = comentarios;
         this.fecha = fecha;
         this.idUsuario = idUsuario;
+        this.idInstrumento = idInstrumento;
+        this.idCompra = idCompra;
     }
 
     public Integer getId() {
@@ -71,5 +76,21 @@ public class Resenas {
 
     public void setIdUsuario(Integer idUsuario) {
         this.idUsuario = idUsuario;
+    }
+
+    public Integer getIdInstrumento() {
+        return idInstrumento;
+    }
+
+    public void setIdInstrumento(Integer idInstrumento) {
+        this.idInstrumento = idInstrumento;
+    }
+
+    public Integer getIdCompra() {
+        return idCompra;
+    }
+
+    public void setIdCompra(Integer idCompra) {
+        this.idCompra = idCompra;
     }
 }

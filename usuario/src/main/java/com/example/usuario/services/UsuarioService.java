@@ -46,6 +46,12 @@ public class UsuarioService {
         return usuarioRepository.existsById(id);
     }
 
+    public boolean validarDireccion(int idDireccion, int idUsuario) {
+        return direccionRepository.findById(idDireccion)
+                .map(d -> d.getIdUsuario() == idUsuario)
+                .orElse(false);
+    }
+
     public String login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPass())

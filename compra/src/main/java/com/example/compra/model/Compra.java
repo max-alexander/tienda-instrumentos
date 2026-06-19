@@ -11,6 +11,7 @@ public class Compra {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 
     private int idCompra;
+    private int idUsuario;
     private int idInstrumento;
     private int cantidad;
     private int montoTotal;
@@ -24,6 +25,13 @@ public class Compra {
     }
     public void setIdCompra(int idCompra) {
         this.idCompra = idCompra;
+    }
+
+    public int getIdUsuario() {
+        return idUsuario;
+    }
+    public void setIdUsuario(int idUsuario) {
+        this.idUsuario = idUsuario;
     }
 
     public int getIdInstrumento() {

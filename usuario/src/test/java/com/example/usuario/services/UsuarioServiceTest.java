@@ -65,6 +65,7 @@ class UsuarioServiceTest {
 
         direccion = new Direccion();
         direccion.setIdDireccion(1);
+        direccion.setIdUsuario(1);
         direccion.setCalle("Av. Principal 100");
         direccion.setCiudad("Santiago");
         direccion.setProvincia("RM");
@@ -102,6 +103,20 @@ class UsuarioServiceTest {
         boolean resultado = service.validarUsuario(1);
 
         assertTrue(resultado);
+    }
+
+    @Test
+    void validarDireccion_cuandoPerteneceAlUsuario_debeRetornarTrue() {
+        when(direccionRepository.findById(1)).thenReturn(Optional.of(direccion));
+
+        assertTrue(service.validarDireccion(1, 1));
+    }
+
+    @Test
+    void validarDireccion_cuandoNoPerteneceAlUsuario_debeRetornarFalse() {
+        when(direccionRepository.findById(1)).thenReturn(Optional.of(direccion));
+
+        assertFalse(service.validarDireccion(1, 99));
     }
 
     @Test

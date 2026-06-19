@@ -1,5 +1,6 @@
 package com.example.postventa.services;
 
+import com.example.postventa.dto.CompraDto;
 import com.example.postventa.model.PostventaModel;
 import com.example.postventa.repository.PostventaRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,7 @@ class PostventaServiceTest {
     private PostventaService service;
 
     private PostventaModel postventa;
+    private CompraDto compraDto;
 
     @BeforeEach
     void setUp() {
@@ -43,6 +45,10 @@ class PostventaServiceTest {
         postventa.setTipoSolicitud("GARANTIA");
         postventa.setDescripcion("Producto defectuoso");
         postventa.setEstado("ABIERTO");
+
+        compraDto = new CompraDto();
+        compraDto.setIdCompra(5);
+        compraDto.setIdUsuario(2);
     }
 
     @Test
@@ -66,13 +72,16 @@ class PostventaServiceTest {
 
     @Test
     void crearPostventa_cuandoValidacionesOk_debeGuardar() {
-        when(restTemplate.getForEntity(anyString(), eq(String.class)))
-                .thenReturn(new ResponseEntity<>("ok", HttpStatus.OK));
+        when(restTemplate.getForObject(contains("/validar/"), eq(Boolean.class))).thenReturn(true);
+        when(restTemplate.getForEntity(contains("/despachos/pedido/"), eq(Object.class)))
+                .thenReturn(new ResponseEntity<>(new Object(), HttpStatus.OK));
+        when(restTemplate.getForObject(contains("/compras/5"), eq(CompraDto.class))).thenReturn(compraDto);
         when(repository.save(postventa)).thenReturn(postventa);
 
         PostventaModel resultado = service.crearPostventa(postventa);
 
         assertNotNull(resultado);
+        assertNotNull(postventa.getFechaCreacion());
         verify(repository).save(postventa);
     }
 
